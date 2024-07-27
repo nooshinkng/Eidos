@@ -4,20 +4,53 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { ScrollControls, useScroll, useGLTF, useAnimations } from '@react-three/drei';
 import { Physics, useSphere } from '@react-three/cannon';
 
-let scrollPosition = 0; // Global variable to store the scroll position
-
-// Listen for scroll position messages from the parent window
-window.addEventListener('message', function(event) {
-    scrollPosition = event.data; // Update the scroll position
-});
 
 export default function App() {
   return (
     <Canvas shadows camera={{ position: [1, 2, 10] }}>
-      <ambientLight intensity={0.5} />
-      <fog attach="fog" args={['#000000', 5, 18]} />
+      <ambientLight intensity={0.5} /> {/* Lower ambient light intensity */}
+      <fog attach="fog" args={['#000000', 5, 18]} /> {/* Darker fog color */}
       <directionalLight
         position={[75, 10, 0]}
+        intensity={1.5}
+        castShadow
+        shadow-mapSize={[1024, 1024]}
+        shadow-bias={-0.001}
+        shadow-camera-left={-10}
+        shadow-camera-right={10}
+        shadow-camera-top={10}
+        shadow-camera-bottom={-10}
+        shadow-camera-near={0.1}
+        shadow-camera-far={50}
+      />
+      <directionalLight
+        position={[-75, 10, 0]}
+        intensity={1.5}
+        castShadow
+        shadow-mapSize={[1024, 1024]}
+        shadow-bias={-0.001}
+        shadow-camera-left={-10}
+        shadow-camera-right={10}
+        shadow-camera-top={10}
+        shadow-camera-bottom={-10}
+        shadow-camera-near={0.1}
+        shadow-camera-far={50}
+      />
+      <directionalLight
+        position={[0, 75, 0]}
+        intensity={2.5}
+        castShadow
+        shadow-mapSize={[1024, 1024]}
+        shadow-bias={-0.001}
+        shadow-camera-left={-10}
+        shadow-camera-right={10}
+        shadow-camera-top={40}
+        shadow-camera-bottom={-10}
+        shadow-camera-near={0.1}
+        shadow-camera-far={50}
+      />
+      <directionalLight
+        position={[0, -75, 0]}
         intensity={1.5}
         castShadow
         shadow-mapSize={[1024, 1024]}
@@ -32,18 +65,19 @@ export default function App() {
       <Suspense fallback={null}>
         <ScrollControls pages={6}>
           <RomeModel scale={0.02} position={[0, 2.5, 0]} />
-          <GlassSphere position={[-1.4, 5.3, 5.5]} />
-          <LightRedBlurrySphere position={[-1.4, 5.3, 5.5]} />
-          <GlassDonut position={[-1, 2.5, -6]} />
+          <GlassSphere position={[-1.4, 5.3, 5.5]} /> {/* Add Glass Sphere */}
+          <LightRedBlurrySphere position={[-1.4, 5.3, 5.5]} /> {/* Add Glass Sphere */}
+          <GlassDonut position={[-1, 2.5, -6]} /> {/* Add Glass Donut */}
           <GlassWall position={[3, 4, -7]} size={[-14, -15, 0.2]} rotation={[0, -0, 0]} />
-          <SpiralSphere position={[0.5, 3.5, -0.61]} />
-          <SpiralCylinder position={[2.5, 3, 6.9]} />
-          <CustomSquare position={[3, 2, 2]} />
-          <RainbowBall position={[6, 8, 9]} />
-          <Balls />
+          <SpiralSphere position={[0.5, 3.5, -0.61]} /> {/* Add Spiral Sphere */}
+          <SpiralCylinder position={[2.5, 3, 6.9]} /> {/* Add Spiral Cylinder */}
+          <CustomSquare position={[3,2, 2]} /> {/* Add Custom Square */}
+          <RainbowBall position={[6, 8, 9]} /> {/* Add Rainbow Ball */}
+          <Balls  /> {/* Add Rainbow Ball */}
         </ScrollControls>
       </Suspense>
-      <color attach="background" args={['#000000']} />
+    
+      <color attach="background" args={['#000000']} /> {/* Dark background color */}
     </Canvas>
   );
 }
@@ -386,14 +420,17 @@ function RomeModel({ ...props }) {
     });
   }, [nodes]);
 
+  // Define more target positions for smoother movement
+  // Define circular target positions for smoother movement around the model
   const targetPositions = [
-    new THREE.Vector3(1, 24, -14),
-    new THREE.Vector3(1, 16, 11),
-    new THREE.Vector3(0, 5, 15),
-    new THREE.Vector3(15, 5, 0),
-    new THREE.Vector3(0, 5, -15),
-    new THREE.Vector3(-16, -15, -15),
+    new THREE.Vector3(1,24, -14),   // Adjusted left position
+    new THREE.Vector3(1, 16, 11),   // Adjusted top position
+    new THREE.Vector3(0, 5, 15),   // Adjusted top position
+    new THREE.Vector3(15, 5, 0),   // Adjusted right position
+    new THREE.Vector3(0, 5, -15),  // Adjusted bottom position
+    new THREE.Vector3(-16, -15, -15),  // Adjusted bottom position
   ];
+
 
   useEffect(() => {
     const action = actions['Take 001'];
@@ -403,11 +440,13 @@ function RomeModel({ ...props }) {
   }, [actions]);
 
   useFrame((state) => {
-    const offset = scrollPosition / (document.body.scrollHeight - window.innerHeight); // Calculate offset based on scroll position
+    const offset = scroll.offset;
 
+    // Calculate the current target index based on the scroll offset
     const targetIndex = Math.floor(offset * (targetPositions.length - 1));
     const nextIndex = (targetIndex + 1) % targetPositions.length;
 
+    // Smoothly interpolate between current and target position
     const currentPos = state.camera.position.clone();
     const startPos = targetPositions[targetIndex];
     const endPos = targetPositions[nextIndex];
@@ -416,8 +455,9 @@ function RomeModel({ ...props }) {
     currentPos.lerpVectors(startPos, endPos, easedOffset);
     state.camera.position.copy(currentPos);
 
-    state.camera.lookAt(new THREE.Vector3(0, 0, 0));
+    state.camera.lookAt(new THREE.Vector3(0, 0, 0)); // Look at the center
 
+    // More pronounced ease-in and ease-out function
     function easeInOutQuad(t) {
       return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
     }
@@ -425,5 +465,6 @@ function RomeModel({ ...props }) {
 
   return <primitive object={scene} {...props} />;
 }
+
 
 useGLTF.preload('/Rome3.glb');
