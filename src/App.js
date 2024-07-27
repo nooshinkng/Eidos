@@ -4,6 +4,12 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { ScrollControls, useScroll, useGLTF, useAnimations } from '@react-three/drei';
 import { Physics, useSphere } from '@react-three/cannon';
 
+window.addEventListener('message', function(event) {
+    var scrollPosition = event.data;
+    // Update your Three.js camera position based on the scrollPosition
+    // Example:
+    // camera.position.z = initialZPosition - scrollPosition * scrollFactor;
+});
 
 export default function App() {
   return (
